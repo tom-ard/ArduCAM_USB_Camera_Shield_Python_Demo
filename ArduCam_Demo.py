@@ -5,7 +5,7 @@ import cv2
 
 from Arducam import *
 from ImageConvert import *
-from ArducamRGBIRParseTools import *
+from arducam_rgbir_debayer import *
 
 exit_ = False
 

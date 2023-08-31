@@ -1,2 +1,3 @@
 ArducamSDK
 arducam_config_parser
+arducam_rgbir_debayer
