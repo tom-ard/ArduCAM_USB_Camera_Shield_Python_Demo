@@ -32,19 +32,16 @@ def RGB565ToMat(data,Width,Height):
     iamge = arr.reshape(Height,Width,4)
     return cv2.flip(iamge,0)
 
-def RGBToMat(data, bitWidth, Width, Height):
+def RGBToMat(data, Width, Height):
     arr = np.fromiter(data, dtype=np.uint16)
-    arr = (arr >> (bitWidth - 8))
-    arr = arr.astype(np.uint8)
     image = arr.reshape(Height,Width,3)
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     return image
 
-def IRToMat(data, bitWidth, Width, Height):
+def IRToMat(data, Width, Height):
     arr = np.fromiter(data, dtype=np.uint16)
-    arr = (arr >> (bitWidth - 8))
-    arr = arr.astype(np.uint8)
     image = arr.reshape(Height,Width, 1)
+    image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
     return image
 
 def dBytesToMat(data,bitWidth,Width,Height):

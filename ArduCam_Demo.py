@@ -9,13 +9,6 @@ from arducam_rgbir_debayer import *
 
 exit_ = False
 
-fill_count_dict = {
-    0x01: 1,
-    0x03: 2,
-    0x07: 3,
-    0x0F: 4
-}
-
 def sigint_handler(signum, frame):
     global exit_
     exit_ = True
@@ -79,18 +72,11 @@ if __name__ == "__main__":
             if camera.cameraCfg["emImageFmtMode"] == 9:
                 width = cfg["u32Width"]
                 height = cfg["u32Height"]
-                bitWidth = cfg["u8PixelBits"]
-                if (bitWidth > 8):
-                    origin = np.frombuffer(data, dtype=np.uint16)
-                else:
-                    origin = np.frombuffer(data, dtype=np.uint8).astype(np.uint16)
-                rows_fill_count = fill_count_dict.get((camera.color_mode >> 4) & 0x0F, 0)
-                cols_fill_count = fill_count_dict.get(camera.color_mode & 0x0F, 0)
-                tmp = np.array(fill(origin, height, width, rows_fill_count, cols_fill_count), dtype=np.uint16)
-                results = processRgbIr16BitData(tmp, height+4, width+4) 
-                rgb_img = RGBToMat(results['rgb'], bitWidth, width+4, height+4)
-                ir_full_img = cv2.cvtColor(IRToMat(results['ir_full'], bitWidth, width+4, height+4), cv2.COLOR_GRAY2BGR)
-                image = cv2.hconcat([rgb_img[:height, :width], ir_full_img[:height, :width]])
+                origin = Convert8To16Buffer(data, cfg["u8PixelBits"], cfg["u32Size"])
+                results = processRgbIr16BitData(np.array(origin, dtype=np.uint16), height, width, camera.color_mode) 
+                rgb_img = RGBToMat(results[0], width, height)
+                ir_full_img = IRToMat(results[1], width, height)
+                image = cv2.hconcat([rgb_img, ir_full_img])
             else: 
                 image = convert_image(data, cfg, camera.color_mode)
 
