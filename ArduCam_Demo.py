@@ -5,9 +5,16 @@ import cv2
 
 from Arducam import *
 from ImageConvert import *
+from ArducamRGBIRParseTools import *
 
 exit_ = False
 
+fill_count_dict = {
+    0x01: 1,
+    0x03: 2,
+    0x07: 3,
+    0x0F: 4
+}
 
 def sigint_handler(signum, frame):
     global exit_
@@ -54,8 +61,8 @@ if __name__ == "__main__":
         camera.dumpDeviceInfo()
 
     camera.start()
-    # camera.setCtrl("setFramerate", 2)
-    # camera.setCtrl("setExposureTime", 20000)
+    camera.setCtrl("setFramerate", 15)
+    camera.setCtrl("setExposureTime", 200000)
     # camera.setCtrl("setAnalogueGain", 800)
 
     scale_width = preview_width
@@ -69,7 +76,23 @@ if __name__ == "__main__":
             continue
 
         if ret:
-            image = convert_image(data, cfg, camera.color_mode)
+            if camera.cameraCfg["emImageFmtMode"] == 9:
+                width = cfg["u32Width"]
+                height = cfg["u32Height"]
+                bitWidth = cfg["u8PixelBits"]
+                if (bitWidth > 8):
+                    origin = np.frombuffer(data, dtype=np.uint16)
+                else:
+                    origin = np.frombuffer(data, dtype=np.uint8).astype(np.uint16)
+                rows_fill_count = fill_count_dict.get((camera.color_mode >> 4) & 0x0F, 0)
+                cols_fill_count = fill_count_dict.get(camera.color_mode & 0x0F, 0)
+                tmp = np.array(fill(origin, height, width, rows_fill_count, cols_fill_count), dtype=np.uint16)
+                results = processRgbIr16BitData(tmp, height+4, width+4) 
+                rgb_img = RGBToMat(results['rgb'], bitWidth, width+4, height+4)
+                ir_full_img = cv2.cvtColor(IRToMat(results['ir_full'], bitWidth, width+4, height+4), cv2.COLOR_GRAY2BGR)
+                image = cv2.hconcat([rgb_img[:height, :width], ir_full_img[:height, :width]])
+            else: 
+                image = convert_image(data, cfg, camera.color_mode)
 
             if scale_width != -1:
                 scale = scale_width / image.shape[1]

@@ -64,7 +64,7 @@ def camera_initFromFile(fileName, index):
            "u8PixelBits": BitWidth,
            "u32I2cAddr": I2cAddr,
            "emI2cMode": I2CMode,
-           "emImageFmtMode": FmtMode,
+           "emImageFmtMode": 0 if FmtMode == 9 else FmtMode,
            "u32TransLvl": TransLvl}
 
     ret, handle, rtn_cfg = ArducamSDK.Py_ArduCam_open(cfg, index)
@@ -95,7 +95,7 @@ def camera_initFromFile(fileName, index):
         print("Serial: %c%c%c%c-%c%c%c%c-%c%c%c%c" % (datas[0], datas[1], datas[2], datas[3],
                                                       datas[4], datas[5], datas[6], datas[7],
                                                       datas[8], datas[9], datas[10], datas[11]))
-
+        rtn_cfg["emImageFmtMode"] = FmtMode
         return (True, handle, rtn_cfg, color_mode)
 
     print("open fail, Error : {}".format(GetErrorString(ret)))
